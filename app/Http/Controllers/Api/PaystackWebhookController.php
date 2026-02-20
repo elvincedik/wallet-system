@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\PaystackService;
 use App\Services\WalletTopupService;
+use App\Jobs\ProcessPaystackPayment;
 use Illuminate\Http\Request;
 
 class PaystackWebhookController extends Controller
@@ -67,30 +68,12 @@ class PaystackWebhookController extends Controller
             ], 422);
         }
 
-        // Verify with Paystack before settlement.
-        $verification = $paystack->verifyPayment($reference);
-
-        if (! ($verification['status'] ?? false) || (($verification['data']['status'] ?? null) !== 'success')) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Could not verify successful payment.',
-            ], 400);
-        }
-
-        $result = $walletTopupService->completeTopupByReference($reference);
-
-        if (! $result['found']) {
-            return response()->json([
-                'status' => true,
-                'message' => 'Reference not mapped to a local topup transaction.',
-            ]);
-        }
+        // Dispatch background job to verify and settle the payment.
+        ProcessPaystackPayment::dispatch($reference)->onQueue('payments');
 
         return response()->json([
             'status' => true,
-            'message' => $result['already_completed']
-                ? 'Webhook received. Transaction already settled.'
-                : 'Webhook received. Transaction settled successfully.',
+            'message' => 'Webhook received. Processing queued.',
             'reference' => $reference,
         ]);
     }

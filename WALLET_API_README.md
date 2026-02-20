@@ -196,3 +196,31 @@ Headers:
 3. Copy your **Secret Key** (starts with `sk_test_`)
 4. Update `.env` file with your keys
 5. You're ready to test!
+
+## Queue setup (background jobs)
+
+This project uses queued jobs to process Paystack webhooks and settle top-ups asynchronously.
+
+1. Set your queue driver in `.env` (database or redis recommended):
+
+```
+QUEUE_CONNECTION=database
+```
+
+2. Create the database queue tables and migrate:
+
+```bash
+php artisan queue:table
+php artisan queue:failed-table
+php artisan migrate
+```
+
+3. Run a worker locally (payments queue):
+
+```bash
+php artisan queue:work --queue=payments,default --tries=3 --sleep=3
+```
+
+Workers should be run under a process manager (Supervisor/systemd) in production.
+
+The webhook handler now enqueues `ProcessPaystackPayment` jobs which verify Paystack responses and settle local transactions.
