@@ -19,14 +19,22 @@ class PaystackService
      */
     public function initializePayment($email, $amount, $reference)
     {
+        $payload = [
+            'email' => $email,
+            'amount' => $amount * 100, // Paystack uses kobo
+            'reference' => $reference,
+        ];
+
+        $callbackUrl = config('services.paystack.callback_url');
+
+        if (! empty($callbackUrl)) {
+            $payload['callback_url'] = $callbackUrl;
+        }
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->secretKey,
             'Content-Type' => 'application/json'
-        ])->post("{$this->paystackBaseUrl}/transaction/initialize", [
-            'email' => $email,
-            'amount' => $amount * 100, // Paystack uses cents
-            'reference' => $reference,
-        ]);
+        ])->post("{$this->paystackBaseUrl}/transaction/initialize", $payload);
 
         return $response->json();
     }

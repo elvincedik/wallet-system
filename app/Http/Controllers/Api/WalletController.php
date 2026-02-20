@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Wallet;
-use App\Models\User;
 use Illuminate\Http\Request;
 
 class WalletController extends Controller
@@ -14,10 +12,10 @@ class WalletController extends Controller
      */
     public function show(Request $request)
     {
-        $user = User::first(); // Get the authenticated user
+        $user = $request->user();
 
         // Create wallet if not exists
-        $wallet = Wallet::firstOrCreate(
+        $wallet = $user->wallet()->firstOrCreate(
             ['user_id' => $user->id],
             ['balance' => 0]
         );
@@ -34,9 +32,10 @@ class WalletController extends Controller
      */
     public function transactions(Request $request)
     {
-        $user = User::first(); // Get the authenticated user
+        $user = $request->user();
+
         // Create or get wallet
-        $wallet = Wallet::firstOrCreate(
+        $wallet = $user->wallet()->firstOrCreate(
             ['user_id' => $user->id],
             ['balance' => 0]
         );

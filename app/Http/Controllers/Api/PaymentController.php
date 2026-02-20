@@ -4,19 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
-use App\Models\Wallet;
-use App\Models\User;
 use App\Services\PaystackService;
+use App\Services\WalletTopupService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
     protected $paystack;
+    protected $walletTopupService;
 
-    public function __construct(PaystackService $paystack)
+    public function __construct(PaystackService $paystack, WalletTopupService $walletTopupService)
     {
         $this->paystack = $paystack;
+        $this->walletTopupService = $walletTopupService;
     }
 
     /**
@@ -28,9 +29,10 @@ class PaymentController extends Controller
             'amount' => 'required|numeric|min:100'
         ]);
 
-        $user = User::first(); // Get the authenticated user
+        $user = $request->user();
+
         // Create or get wallet
-        $wallet = Wallet::firstOrCreate(
+        $wallet = $user->wallet()->firstOrCreate(
             ['user_id' => $user->id],
             ['balance' => 0]
         );
@@ -79,6 +81,7 @@ class PaymentController extends Controller
         ]);
 
         $reference = $request->reference;
+        $user = $request->user();
 
         // Verify with Paystack
         $response = $this->paystack->verifyPayment($reference);
@@ -101,29 +104,36 @@ class PaymentController extends Controller
             ], 400);
         }
 
-        // Find transaction
-        $transaction = Transaction::where('reference', $reference)->first();
+        $result = $this->walletTopupService->completeTopupByReference($reference, $user->id);
 
-        if (!$transaction) {
+        if (! $result['found']) {
             return response()->json([
                 'status' => false,
                 'message' => 'Transaction not found'
             ], 404);
         }
 
-        // Update transaction status
-        $transaction->update(['status' => 'completed']);
+        /** @var \App\Models\Transaction $transaction */
+        $transaction = $result['transaction'];
 
-        // Credit wallet
-        $wallet = $transaction->wallet;
-        $wallet->increment('balance', $transaction->amount);
+        if ($result['already_completed']) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Payment already verified',
+                'data' => [
+                    'amount' => (float) $transaction->amount,
+                    'wallet_balance' => $result['wallet_balance'],
+                    'reference' => $reference,
+                ],
+            ]);
+        }
 
         return response()->json([
             'status' => true,
             'message' => 'Payment verified and wallet credited',
             'data' => [
                 'amount' => (float) $transaction->amount,
-                'wallet_balance' => (float) $wallet->balance,
+                'wallet_balance' => $result['wallet_balance'],
                 'reference' => $reference
             ]
         ]);

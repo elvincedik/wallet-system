@@ -33,7 +33,7 @@ class GenerateToken extends Command
             return;
         }
 
-        $token = $user->createToken('api-test');
+        $token = $user->createToken('api-test')->plainTextToken;
 
         $this->info("\n========================================");
         $this->info("API Token Generated Successfully!");

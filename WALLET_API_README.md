@@ -11,6 +11,10 @@ Replace the Paystack placeholders in `.env`:
 ```env
 PAYSTACK_PUBLIC_KEY=pk_test_your_test_key_here
 PAYSTACK_SECRET_KEY=sk_test_your_test_key_here
+PAYSTACK_WEBHOOK_SECRET=sk_test_your_test_key_here
+PAYSTACK_CALLBACK_URL=http://localhost:8000/api/paystack/callback
+# Optional: where backend callback redirects users after payment
+PAYSTACK_FRONTEND_CALLBACK_URL=http://localhost:5173/payment/callback
 ```
 
 Get your test keys from: https://dashboard.paystack.com/settings/developer
@@ -121,6 +125,18 @@ Response:
     "reference": "TXN_uuid"
   }
 }
+```
+
+### Paystack Callback (Public)
+```
+GET /api/paystack/callback?reference=TXN_uuid
+```
+
+### Paystack Webhook (Public)
+```
+POST /api/paystack/webhook
+Headers:
+  x-paystack-signature: {hmac_sha512_signature}
 ```
 
 ## Testing with Postman
