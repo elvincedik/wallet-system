@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Wallet;
+use App\Models\User;
+use Illuminate\Http\Request;
+
+class WalletController extends Controller
+{
+    /**
+     * Get user's wallet with balance
+     */
+    public function show(Request $request)
+    {
+        $user = User::first(); // Get the authenticated user
+
+        // Create wallet if not exists
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $user->id],
+            ['balance' => 0]
+        );
+
+        return response()->json([
+            'id' => $wallet->id,
+            'balance' => (float) $wallet->balance,
+            'currency' => 'NGN'
+        ]);
+    }
+
+    /**
+     * Get wallet transactions
+     */
+    public function transactions(Request $request)
+    {
+        $user = User::first(); // Get the authenticated user
+        // Create or get wallet
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $user->id],
+            ['balance' => 0]
+        );
+
+        $transactions = $wallet->transactions()
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($t) => [
+                'id' => $t->id,
+                'type' => $t->type,
+                'amount' => (float) $t->amount,
+                'status' => $t->status,
+                'reference' => $t->reference,
+                'created_at' => $t->created_at->toIso8601String()
+            ]);
+
+        return response()->json(['transactions' => $transactions]);
+    }
+}
