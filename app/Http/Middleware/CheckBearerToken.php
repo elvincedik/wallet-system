@@ -13,15 +13,10 @@ class CheckBearerToken
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->bearerToken();
-
-        if (!$token) {
+        
+        if (!$request->user()) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-
-        // For now, accept any token. In production, validate against stored tokens.
-        // You could store tokens in a table or session.
-        $request->attributes->set('user_id', 1); // Assume user ID 1
 
         return $next($request);
     }
