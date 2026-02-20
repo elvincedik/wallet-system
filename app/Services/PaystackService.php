@@ -17,11 +17,11 @@ class PaystackService
     /**
      * Initialize a payment transaction
      */
-    public function initializePayment($email, $amount, $reference)
+    public function initializePayment($email, $amountInKobo, $reference)
     {
         $payload = [
             'email' => $email,
-            'amount' => $amount * 100, // Paystack uses kobo
+            'amount' => $amountInKobo, // Paystack expects lowest denomination (kobo)
             'reference' => $reference,
         ];
 

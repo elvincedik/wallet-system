@@ -38,7 +38,7 @@ test('paystack webhook settles pending topup once', function () {
     Transaction::create([
         'wallet_id' => $wallet->id,
         'type' => 'topup',
-        'amount' => 5000,
+        'amount' => 500000,
         'status' => 'pending',
         'reference' => 'TXN_SETTLE_1',
     ]);
@@ -79,7 +79,7 @@ test('paystack webhook settles pending topup once', function () {
     ]);
 
     $wallet->refresh();
-    expect((float) $wallet->balance)->toBe(5000.0);
+    expect((int) $wallet->balance)->toBe(500000);
 });
 
 test('callback endpoint accepts reference', function () {

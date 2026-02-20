@@ -19,12 +19,12 @@ test('authenticated user sees their own wallet', function () {
 
     Wallet::create([
         'user_id' => $firstUser->id,
-        'balance' => 1000,
+        'balance' => 100000,
     ]);
 
     Wallet::create([
         'user_id' => $secondUser->id,
-        'balance' => 2500,
+        'balance' => 250000,
     ]);
 
     Sanctum::actingAs($secondUser);
@@ -63,7 +63,7 @@ test('authenticated user can initiate topup for own wallet', function () {
     $this->assertDatabaseHas('transactions', [
         'wallet_id' => $wallet->id,
         'type' => 'topup',
-        'amount' => '5000.00',
+        'amount' => 500000,
         'status' => 'pending',
     ]);
 });
@@ -80,7 +80,7 @@ test('user can not verify another users topup reference', function () {
     $transaction = Transaction::create([
         'wallet_id' => $wallet->id,
         'type' => 'topup',
-        'amount' => 5000,
+        'amount' => 500000,
         'status' => 'pending',
         'reference' => 'TXN_OWNER_ONLY',
     ]);

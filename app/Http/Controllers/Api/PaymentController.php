@@ -20,14 +20,25 @@ class PaymentController extends Controller
         $this->walletTopupService = $walletTopupService;
     }
 
+    private function toKobo(float $amount): int
+    {
+        return (int) round($amount * 100);
+    }
+
+    private function fromKobo(int $amount): float
+    {
+        return $amount / 100;
+    }
+
     /**
      * Initiate a topup payment
      */
     public function initiateTopup(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'amount' => 'required|numeric|min:100'
         ]);
+        $amountInKobo = $this->toKobo((float) $validated['amount']);
 
         $user = $request->user();
 
@@ -42,7 +53,7 @@ class PaymentController extends Controller
         $transaction = Transaction::create([
             'wallet_id' => $wallet->id,
             'type' => 'topup',
-            'amount' => $request->amount,
+            'amount' => $amountInKobo,
             'status' => 'pending',
             'reference' => $reference
         ]);
@@ -50,7 +61,7 @@ class PaymentController extends Controller
         // Initialize payment with Paystack
         $response = $this->paystack->initializePayment(
             $user->email,
-            $request->amount,
+            $amountInKobo,
             $reference
         );
 
@@ -66,7 +77,7 @@ class PaymentController extends Controller
                 'authorization_url' => $response['data']['authorization_url'],
                 'access_code' => $response['data']['access_code'],
                 'reference' => $reference,
-                'amount' => $request->amount
+                'amount' => $this->fromKobo($amountInKobo)
             ]
         ]);
     }
@@ -121,8 +132,8 @@ class PaymentController extends Controller
                 'status' => true,
                 'message' => 'Payment already verified',
                 'data' => [
-                    'amount' => (float) $transaction->amount,
-                    'wallet_balance' => $result['wallet_balance'],
+                    'amount' => $this->fromKobo((int) $transaction->amount),
+                    'wallet_balance' => $this->fromKobo((int) $result['wallet_balance']),
                     'reference' => $reference,
                 ],
             ]);
@@ -132,8 +143,8 @@ class PaymentController extends Controller
             'status' => true,
             'message' => 'Payment verified and wallet credited',
             'data' => [
-                'amount' => (float) $transaction->amount,
-                'wallet_balance' => $result['wallet_balance'],
+                'amount' => $this->fromKobo((int) $transaction->amount),
+                'wallet_balance' => $this->fromKobo((int) $result['wallet_balance']),
                 'reference' => $reference
             ]
         ]);

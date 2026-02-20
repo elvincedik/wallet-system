@@ -8,7 +8,7 @@ class Wallet extends Model
 {
     protected $fillable = ['user_id', 'balance'];
     protected $casts = [
-        'balance' => 'decimal:2',
+        'balance' => 'integer',
     ];
 
     public function user()

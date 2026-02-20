@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class WalletController extends Controller
 {
+    private function fromKobo(int $amount): float
+    {
+        return $amount / 100;
+    }
+
     /**
      * Get user's wallet with balance
      */
@@ -22,7 +27,7 @@ class WalletController extends Controller
 
         return response()->json([
             'id' => $wallet->id,
-            'balance' => (float) $wallet->balance,
+            'balance' => $this->fromKobo((int) $wallet->balance),
             'currency' => 'NGN'
         ]);
     }
@@ -46,7 +51,7 @@ class WalletController extends Controller
             ->map(fn($t) => [
                 'id' => $t->id,
                 'type' => $t->type,
-                'amount' => (float) $t->amount,
+                'amount' => $this->fromKobo((int) $t->amount),
                 'status' => $t->status,
                 'reference' => $t->reference,
                 'created_at' => $t->created_at->toIso8601String()

@@ -10,7 +10,7 @@ class WalletTopupService
     /**
      * Complete a topup transaction and credit wallet once.
      *
-     * @return array{found: bool, already_completed: bool, transaction: ?\App\Models\Transaction, wallet_balance: ?float}
+     * @return array{found: bool, already_completed: bool, transaction: ?\App\Models\Transaction, wallet_balance: ?int}
      */
     public function completeTopupByReference(string $reference, ?int $userId = null): array
     {
@@ -52,7 +52,7 @@ class WalletTopupService
                     'found' => true,
                     'already_completed' => true,
                     'transaction' => $transaction,
-                    'wallet_balance' => (float) $wallet->balance,
+                    'wallet_balance' => (int) $wallet->balance,
                 ];
             }
 
@@ -66,7 +66,7 @@ class WalletTopupService
                 'found' => true,
                 'already_completed' => false,
                 'transaction' => $transaction->fresh(),
-                'wallet_balance' => (float) $wallet->balance,
+                'wallet_balance' => (int) $wallet->balance,
             ];
         });
     }

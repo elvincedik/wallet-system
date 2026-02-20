@@ -8,7 +8,7 @@ class Transaction extends Model
 {
     protected $fillable = ['wallet_id', 'type', 'amount', 'status', 'reference'];
     protected $casts = [
-        'amount' => 'decimal:2',
+        'amount' => 'integer',
     ];
 
     public function wallet()
