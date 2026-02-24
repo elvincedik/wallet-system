@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('wallet_id')->constrained();
             $table->string('type'); // topup, debit
             $table->decimal('amount', 15, 2);
-            $table->string('status')->default('pending'); // pending, completed, failed
+            $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
             $table->string('reference')->unique()->nullable();
             $table->timestamps();
         });
@@ -30,3 +30,4 @@ return new class extends Migration
         Schema::dropIfExists('transactions');
     }
 };
+
